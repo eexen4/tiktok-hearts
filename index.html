@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Heart Overlay</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: transparent;
+    }
+    .heart, .avatar {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      pointer-events: none;
+      animation: floatUp 4s ease-out forwards;
+    }
+    .heart {
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      border-radius: 50%;
+    }
+    .avatar {
+      border-radius: 50%;
+      overflow: hidden;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-400px) scale(1.5); opacity: 0; }
+    }
+@keyframes floatUpStraight {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--move-x), -400px) scale(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes wobbleRotate {
+  0% { rotate: 0deg; }
+  25% { rotate: 3deg; }
+  50% { rotate: -2deg; }
+  75% { rotate: 1deg; }
+  100% { rotate: 0deg; }
+}
+
+
+
+  </style>
+</head>
+<body>
+
+<script>
+const heartColors = [
+  '#00FFA3', '#00FFD1', '#6400FF', '#9400D3', '#5C00A3', '#7F00FF'
+];
+
+function createHeartOrAvatar(profilePicUrl = null) {
+  const element = document.createElement('div');
+  
+  if (profilePicUrl && Math.random() < 0.1) {
+    element.className = 'avatar';
+    element.style.backgroundImage = `url(${profilePicUrl})`;
+    element.style.backgroundSize = 'cover';
+  } else {
+    const hearts = ['heart1.png', 'heart2.png', 'heart3.png', 'heart4.png', 'heart5.png'];
+    const randomHeart = hearts[Math.floor(Math.random() * hearts.length)];
+    element.className = 'heart';
+    element.style.backgroundImage = `url(${randomHeart})`;
+    element.style.backgroundSize = "contain";
+    element.style.backgroundRepeat = "no-repeat";
+    element.style.backgroundPosition = "center";
+  }
+
+  // Losowy rozmiar (35-44px)
+  const randomSize = Math.floor(Math.random() * 10) + 35;
+  element.style.width = randomSize + 'px';
+  element.style.height = randomSize + 'px';
+
+  // Start w środku na dole
+  element.style.left = (window.innerWidth / 2 - randomSize / 2) + 'px';
+  element.style.bottom = '0px';
+
+  // Losowy odchył w poziomie
+  const randomX = (Math.random() * 100 - 50) + 'px';
+  element.style.setProperty('--move-x', randomX);
+
+  // Animacje: lot + bujanie
+  element.style.animation = `floatUpStraight 4s ease-out forwards, wobbleRotate 2s infinite ease-in-out`;
+
+  document.body.appendChild(element);
+
+  setTimeout(() => { element.remove(); }, 4000);
+}
+
+const socket = new WebSocket('wss://' + window.location.host + '/api/socket');
+
+socket.addEventListener('message', function (event) {
+  const data = JSON.parse(event.data);
+  if (data.type === 'like') {
+    const profilePicUrl = data?.user?.profilePictureUrl || null;
+    for (let i = 0; i < data.likeCount; i++) {
+      createHeartOrAvatar(profilePicUrl);
+    }
+  }
+});
+
+socket.addEventListener('open', () => console.log('Connected to server'));
+socket.addEventListener('close', () => console.log('Disconnected from server'));
+</script>
+
+</body>
+</html>

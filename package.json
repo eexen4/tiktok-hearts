@@ -1,0 +1,8 @@
+{
+  "name": "tiktok-hearts-overlay",
+  "version": "1.0.0",
+  "scripts": {},
+  "dependencies": {
+    "ws": "^8.13.0"
+  }
+}
